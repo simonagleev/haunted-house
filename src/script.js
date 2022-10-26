@@ -33,6 +33,7 @@ gltfLoader.load(
         cat = gltf.scene
         cat.position.set(0, 0, 4)
         cat.rotation.y = - Math.PI / 2
+        cat.scale.set(.5, .5, .5)
         scene.add(gltf.scene)
 
         mixer = new THREE.AnimationMixer(gltf.scene);
