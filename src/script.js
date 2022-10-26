@@ -2,7 +2,7 @@ import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'lil-gui'
-
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 /**
  * Base
  */
@@ -18,6 +18,33 @@ const scene = new THREE.Scene()
 // FOG
 const fog = new THREE.Fog(0x262837, 1, 26)
 scene.fog = fog
+
+/**
+ * Textures
+ */
+const gltfLoader = new GLTFLoader()
+
+let cat;
+let mixer;
+let mixer2
+gltfLoader.load(
+    'models/cat-animation4.gltf',
+    (gltf) => {
+        cat = gltf.scene
+        cat.position.set(0, 0, 4)
+        cat.rotation.y = - Math.PI / 2
+        scene.add(gltf.scene)
+
+        mixer = new THREE.AnimationMixer(gltf.scene);
+        mixer2 = new THREE.AnimationMixer(gltf.scene);
+        const run = mixer.clipAction(gltf.animations[1])
+        // console.log(action)
+        const chill = mixer2.clipAction(gltf.animations[0])
+        run.play()
+        chill.play()
+    },
+)
+
 
 /**
  * Textures
@@ -78,7 +105,7 @@ const walls = new THREE.Mesh(
 walls.position.y = 2.5 / 2
 walls.geometry.setAttribute(
     'uv2',
-     new THREE.Float16BufferAttribute(walls.geometry.attributes.uv.array, 2)
+    new THREE.Float16BufferAttribute(walls.geometry.attributes.uv.array, 2)
 )
 
 house.add(walls)
@@ -97,7 +124,7 @@ house.add(roof)
 // DOOR
 const door = new THREE.Mesh(
     new THREE.PlaneGeometry(2.2, 2.2, 100, 100),
-    new THREE. MeshStandardMaterial({
+    new THREE.MeshStandardMaterial({
         map: doorColorTexture,
         transparent: true,
         alphaMap: doorAlphaTexture,
@@ -113,7 +140,7 @@ const door = new THREE.Mesh(
 
 door.geometry.setAttribute(
     'uv2',
-     new THREE.Float16BufferAttribute(door.geometry.attributes.uv.array, 2)
+    new THREE.Float16BufferAttribute(door.geometry.attributes.uv.array, 2)
 )
 
 door.position.y = 1
@@ -154,7 +181,7 @@ const graveMaterial = new THREE.MeshStandardMaterial({
     color: 0xb2b6b1
 })
 
-for(let i = 0; i < 50; i++) {
+for (let i = 0; i < 50; i++) {
     const angle = Math.random() * Math.PI * 2;
     const radius = 3.5 + Math.random() * 6
     const x = Math.sin(angle) * radius
@@ -172,7 +199,7 @@ for(let i = 0; i < 50; i++) {
 // Floor
 const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(20, 20),
-    new THREE.MeshStandardMaterial({ 
+    new THREE.MeshStandardMaterial({
         map: grassColorTExture,
         aoMap: grassAmbientOcclusionTExture,
         normalMap: grassNormalTExture,
@@ -182,7 +209,7 @@ const floor = new THREE.Mesh(
 
 floor.geometry.setAttribute(
     'uv2',
-     new THREE.Float16BufferAttribute(floor.geometry.attributes.uv.array, 2)
+    new THREE.Float16BufferAttribute(floor.geometry.attributes.uv.array, 2)
 )
 
 floor.rotation.x = - Math.PI * 0.5
@@ -230,8 +257,7 @@ const sizes = {
     height: window.innerHeight
 }
 
-window.addEventListener('resize', () =>
-{
+window.addEventListener('resize', () => {
     // Update sizes
     sizes.width = window.innerWidth
     sizes.height = window.innerHeight
@@ -243,7 +269,7 @@ window.addEventListener('resize', () =>
     // Update renderer
     renderer.setSize(sizes.width, sizes.height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-   
+
 })
 
 /**
@@ -303,13 +329,17 @@ ghost3.shadow.mapSize.width = 256
 ghost3.shadow.mapSize.height = 256
 ghost3.shadow.camera.far = 7
 
+setTimeout(() => {
+    gui.add(cat.rotation, 'y').min(0).max(360).step(1)
+
+}, 3000)
+
 /**
  * Animate
  */
 const clock = new THREE.Clock()
 
-const tick = () =>
-{
+const tick = () => {
     const elapsedTime = clock.getElapsedTime()
 
     // UPDATE GHOST
@@ -323,11 +353,12 @@ const tick = () =>
     ghost2.position.x = - Math.cos(ghost2Angle) * 5
     ghost2.position.z = Math.sin(ghost2Angle) * 5
     ghost2.position.y = Math.sin(elapsedTime * 2) * Math.sin(elapsedTime * 0.5)
-    
+
     const ghost3Angle = elapsedTime * 0.18
     ghost3.position.x = Math.cos(ghost3Angle) * 6.27
-    ghost3.position.z = Math.sin(ghost3Angle)  * 3.44 + 2.23
+    ghost3.position.z = Math.sin(ghost3Angle) * 3.44 + 2.23
     ghost3.position.y = Math.sin(elapsedTime * 3 + 1.78) * 2.22
+   
 
     // Update controls
     controls.update()
@@ -340,3 +371,68 @@ const tick = () =>
 }
 
 tick()
+
+const catMovement = (event) => {
+    let keyCode = event.which;
+    if (cat) {
+      // forward
+      if (keyCode == 87) {
+        cat.rotation.y = 33
+        if (cat) {
+          mixer.update(clock.getDelta() * 3)
+      
+        } else {
+          console.log('no cat to animate')
+        }
+        cat.position.z -= .1;
+
+        // down
+      } else if (keyCode == 83) {
+        cat.rotation.y = 11
+        if (cat) {
+          mixer.update(clock.getDelta() * 3)
+      
+        } else {
+          console.log('no cat to animate')
+        }
+        cat.position.z += .1;
+
+        // left
+      } else if (keyCode == 65) {
+        cat.rotation.y = 179
+        if (cat) {
+          mixer.update(clock.getDelta() * 3)
+      
+        } else {
+          console.log('no cat to animate')
+        }
+        cat.position.x -= .1;
+
+        // right
+      } else if (keyCode == 68) {
+        cat.rotation.y = 0
+  
+        if (cat) {
+          mixer.update(clock.getDelta() * 3)
+      
+        } else {
+          console.log('no cat to animate')
+        }
+        cat.position.x += .1;
+        // space
+      } else if (keyCode == 32) {
+        cat.position.x = 0.0;
+        cat.position.y = 0.0;
+      }
+    }
+  };
+  document.addEventListener("keydown", catMovement, false);
+
+ 
+const catChill = (event) => {
+    if(cat) {
+        mixer2.update(clock.getDelta())
+    }
+}
+
+document.addEventListener("keyup", catChill, false);
